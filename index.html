@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Subject Decoder & Encoder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur py-4 px-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-envelope-open-text text-indigo-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">MIME Subject Tool</h1>
+            </div>
+            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">
+                UTF-8 / Base64 / QP
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl w-full mx-auto p-4 sm:p-6 flex-grow flex flex-col justify-center">
+        
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+            
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-white mb-2">Email Subject Converter</h2>
+                <p class="text-slate-400 text-sm">Decode or encode email header subjects instantly (Supports UTF-8 Base64 & Quoted-Printable).</p>
+            </div>
+
+            <!-- Input Box -->
+            <div class="mb-5">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Input Subject / Encoded String</label>
+                    <button onclick="pasteInput()" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1">
+                        <i class="fa-regular fa-clipboard"></i> Paste
+                    </button>
+                </div>
+                <textarea id="inputText" rows="4" 
+                    class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono text-sm"
+                    placeholder="Enter plain text OR encoded subject like:&#10;=?UTF-8?B?4K6k4K6u4K6f4K+N4K6k4K6u4K+N?=\n=?UTF-8?Q?Hello_=E0_World?="></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <button onclick="process('decode')" 
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl transition shadow-lg shadow-indigo-600/20 active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-key text-sm"></i> Decode
+                </button>
+                
+                <button onclick="process('encode-b64')" 
+                    class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium py-2.5 px-4 rounded-xl transition border border-slate-600 active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-[#]"></i> Encode Base64 (B)
+                </button>
+                
+                <button onclick="process('encode-qp')" 
+                    class="bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium py-2.5 px-4 rounded-xl transition border border-slate-600 active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-code text-sm"></i> Encode QP (Q)
+                </button>
+            </div>
+
+            <!-- Output Box -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Result Output</label>
+                    <button onclick="copyOutput()" class="text-xs text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i> <span id="copyBtnText">Copy</span>
+                    </button>
+                </div>
+                <textarea id="outputText" rows="4" readonly 
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-emerald-400 font-mono text-sm focus:outline-none cursor-text"
+                    placeholder="Output will appear here..."></textarea>
+            </div>
+
+            <!-- Samples / Test Cases -->
+            <div class="mt-6 pt-5 border-t border-slate-700/50">
+                <p class="text-xs text-slate-400 mb-2">Quick Test Examples (Click to try):</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setSample('=?UTF-8?B?4K6k4K6u4K6f4K+N4K6k4K6u4K+N?=')" class="text-xs bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition">Tamil Base64</button>
+                    <button onclick="setSample('=?UTF-8?Q?Hello_=E0_World?=')" class="text-xs bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition">Quoted Printable</button>
+                    <button onclick="setSample('தமிழ் மின்னஞ்சல் தலைப்பு')" class="text-xs bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-300 px-2.5 py-1 rounded-lg transition">Plain Tamil Text</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 text-center text-xs text-slate-500 border-t border-slate-800">
+        Standalone Static App - Ready for Render Deployment
+    </footer>
+
+    <!-- Conversion JavaScript -->
+    <script>
+        function process(mode) {
+            const input = document.getElementById('inputText').value.trim();
+            const outputField = document.getElementById('outputText');
+
+            if (!input) {
+                outputField.value = "Error: Please enter text in the input box first.";
+                return;
+            }
+
+            try {
+                if (mode === 'decode') {
+                    outputField.value = decodeMimeSubject(input);
+                } else if (mode === 'encode-b64') {
+                    outputField.value = encodeBase64Subject(input);
+                } else if (mode === 'encode-qp') {
+                    outputField.value = encodeQPSubject(input);
+                }
+            } catch (err) {
+                outputField.value = "Error parsing string. Please check input format.";
+            }
+        }
+
+        // Decode MIME Subject (=?UTF-8?B?...?= or =?UTF-8?Q?...?=)
+        function decodeMimeSubject(text) {
+            const regex = /=\?([^?]+)\?([BQbq])\?([^?]+)\?=/g;
+            if (!regex.test(text)) {
+                return text; // Return as-is if not encoded format
+            }
+
+            return text.replace(/=\?([^?]+)\?([BQbq])\?([^?]+)\?=/g, (match, charset, encoding, data) => {
+                const enc = encoding.toUpperCase();
+                if (enc === 'B') {
+                    const binary = atob(data);
+                    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+                    return new TextDecoder(charset).decode(bytes);
+                } else if (enc === 'Q') {
+                    let qpDecoded = data.replace(/_/g, ' ');
+                    qpDecoded = qpDecoded.replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => {
+                        return String.fromCharCode(parseInt(hex, 16));
+                    });
+                    const bytes = Uint8Array.from(qpDecoded, char => char.charCodeAt(0));
+                    return new TextDecoder(charset).decode(bytes);
+                }
+                return match;
+            });
+        }
+
+        // Encode to UTF-8 Base64
+        function encodeBase64Subject(text) {
+            const bytes = new TextEncoder().encode(text);
+            let binary = '';
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            return `=?UTF-8?B?${btoa(binary)}?=`;
+        }
+
+        // Encode to UTF-8 Quoted Printable
+        function encodeQPSubject(text) {
+            const bytes = new TextEncoder().encode(text);
+            let qp = '';
+            bytes.forEach(byte => {
+                if (byte === 32) {
+                    qp += '_';
+                } else if ((byte >= 48 && byte <= 57) || (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)) {
+                    qp += String.fromCharCode(byte);
+                } else {
+                    qp += '=' + byte.toString(16).toUpperCase().padStart(2, '0');
+                }
+            });
+            return `=?UTF-8?Q?${qp}?=`;
+        }
+
+        // Helper Actions
+        function copyOutput() {
+            const output = document.getElementById('outputText');
+            if (!output.value) return;
+            output.select();
+            navigator.clipboard.writeText(output.value);
+            
+            const copyText = document.getElementById('copyBtnText');
+            copyText.innerText = "Copied!";
+            setTimeout(() => copyText.innerText = "Copy", 2000);
+        }
+
+        async function pasteInput() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('inputText').value = text;
+            } catch (err) {
+                alert('Clipboard access denied or unavailable.');
+            }
+        }
+
+        function setSample(val) {
+            document.getElementById('inputText').value = val;
+        }
+    </script>
+</body>
+</html>
