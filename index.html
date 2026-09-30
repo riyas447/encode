@@ -29,7 +29,7 @@
             
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-white mb-2">Email Subject Converter</h2>
-                <p class="text-slate-400 text-sm">Decode or encode email header subjects instantly (Supports UTF-8 Base64 & Quoted-Printable).</p>
+                <p class="text-slate-400 text-sm">Decode or encode email header subjects with exact space preserving support.</p>
             </div>
 
             <!-- Input Box -->
@@ -42,7 +42,7 @@
                 </div>
                 <textarea id="inputText" rows="4" 
                     class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono text-sm"
-                    placeholder="Enter plain text OR encoded subject like:&#10;=?UTF-8?B?SGVsbG8gV29ybGQ=?=\n=?UTF-8?Q?Hello_World?="></textarea>
+                    placeholder="Enter plain text (with spaces) OR encoded subject like:&#10;=?UTF-8?B?4K6k4K6u4K6f4K+N4K6k4K6u4K+N?=\n=?UTF-8?Q?Hello_=E0_World?="></textarea>
             </div>
 
             <!-- Action Buttons -->
@@ -75,6 +75,7 @@
                     class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-emerald-400 font-mono text-sm focus:outline-none cursor-text"
                     placeholder="Output will appear here..."></textarea>
             </div>
+
         </div>
     </main>
 
@@ -86,7 +87,8 @@
     <!-- Conversion JavaScript -->
     <script>
         function process(mode) {
-            const input = document.getElementById('inputText').value.trim();
+            // trim() vaipathal front/back extra newline mattum clip aagum, inner spaces exactly retain aagum
+            const input = document.getElementById('inputText').value;
             const outputField = document.getElementById('outputText');
 
             if (!input) {
@@ -111,7 +113,7 @@
         function decodeMimeSubject(text) {
             const regex = /=\?([^?]+)\?([BQbq])\?([^?]+)\?=/g;
             if (!regex.test(text)) {
-                return text; // Return as-is if not encoded format
+                return text;
             }
 
             return text.replace(/=\?([^?]+)\?([BQbq])\?([^?]+)\?=/g, (match, charset, encoding, data) => {
@@ -132,7 +134,7 @@
             });
         }
 
-        // Encode to UTF-8 Base64
+        // Encode to UTF-8 Base64 (Includes space bytes seamlessly)
         function encodeBase64Subject(text) {
             const bytes = new TextEncoder().encode(text);
             let binary = '';
@@ -140,13 +142,13 @@
             return `=?UTF-8?B?${btoa(binary)}?=`;
         }
 
-        // Encode to UTF-8 Quoted Printable
+        // Encode to UTF-8 Quoted Printable (Encodes spaces as '_' or '=20' as per MIME specs)
         function encodeQPSubject(text) {
             const bytes = new TextEncoder().encode(text);
             let qp = '';
             bytes.forEach(byte => {
-                if (byte === 32) {
-                    qp += '_';
+                if (byte === 32) { // ASCII Code for space
+                    qp += '_'; // Or '=20'
                 } else if ((byte >= 48 && byte <= 57) || (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)) {
                     qp += String.fromCharCode(byte);
                 } else {
